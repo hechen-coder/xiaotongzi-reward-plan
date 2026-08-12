@@ -22,19 +22,25 @@
   <!-- 顶部积分展示区 -->
   <header>
     <div class="header-top">
-      <h1><i class="fa-solid fa-star"></i> 小彤子奖励计划</h1>
-      <i class="fa-solid fa-gear settings-btn" onclick="openSettingsModal()"></i>
+      <div class="header-title">
+        <h1><i class="fa-solid fa-star"></i> 小彤子奖励计划</h1>
+        <div id="today-date" class="date-display"></div>
+      </div>
+      <div class="header-actions">
+        <div id="streak-display" class="streak-display">已连续努力 0 天 👏</div>
+        <i class="fa-solid fa-gear settings-btn" onclick="openSettingsModal()"></i>
+      </div>
     </div>
-    <div id="today-date" class="date-display"></div>
-    <div id="streak-display" class="streak-display">已连续努力 0 天 👏</div>
+    
     <div class="points-container">
       <div class="point-box">
-        <span class="point-label">可用积分</span>
         <span class="point-value" id="current-points">0</span>
+        <span class="point-label">可用积分</span>
       </div>
+      <div class="point-divider"></div>
       <div class="point-box">
-        <span class="point-label">总累计积分</span>
         <span class="point-value" id="total-points">0</span>
+        <span class="point-label">总累计积分</span>
       </div>
     </div>
     
