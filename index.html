@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>小彤子奖励计划</title>
+  
+  <!-- PWA 配置 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff8fab">
+  <link rel="apple-touch-icon" href="icon.jpg">
+
   <link rel="stylesheet" href="style.css">
   <!-- 引入 FontAwesome 图标库 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,8 +21,12 @@
 <body>
   <!-- 顶部积分展示区 -->
   <header>
-    <h1><i class="fa-solid fa-star"></i> 学习奖励计划</h1>
+    <div class="header-top">
+      <h1><i class="fa-solid fa-star"></i> 小彤子奖励计划</h1>
+      <i class="fa-solid fa-gear settings-btn" onclick="openSettingsModal()"></i>
+    </div>
     <div id="today-date" class="date-display"></div>
+    <div id="streak-display" class="streak-display">已连续努力 0 天 👏</div>
     <div class="points-container">
       <div class="point-box">
         <span class="point-label">可用积分</span>
@@ -25,6 +35,14 @@
       <div class="point-box">
         <span class="point-label">总累计积分</span>
         <span class="point-value" id="total-points">0</span>
+      </div>
+    </div>
+    
+    <!-- 进度条 -->
+    <div class="progress-container">
+      <div class="progress-text" id="progress-text">距离下一个心愿还差 - 分</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar-fill"></div>
       </div>
     </div>
   </header>
@@ -56,6 +74,31 @@
       <div class="section-title"><i class="fa-solid fa-shoe-prints"></i> 我的足迹</div>
       <div class="timeline" id="history-timeline">
         <!-- 动态渲染历史记录 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置与备份模态框 (隐藏) -->
+  <div id="settings-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+      <div class="close-btn" onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></div>
+      <h2 style="color: var(--secondary-color); margin-bottom: 20px;"><i class="fa-solid fa-gear"></i> 设置与备份</h2>
+      
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; text-align: center;">
+        为了防止浏览器清理缓存导致数据丢失，请定期导出数据备份。
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+        <button class="btn-save-img" style="background: var(--primary-color);" onclick="exportData()">
+          <i class="fa-solid fa-file-export"></i> 导出数据备份 (JSON)
+        </button>
+        
+        <div style="position: relative;">
+          <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+          <button class="btn-save-img" style="background: #a78bfa;" onclick="document.getElementById('import-file').click()">
+            <i class="fa-solid fa-file-import"></i> 导入数据恢复
+          </button>
+        </div>
       </div>
     </div>
   </div>

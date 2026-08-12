@@ -1,0 +1,16 @@
+{
+  "name": "小彤子奖励计划",
+  "short_name": "奖励计划",
+  "description": "专属学习打卡与积分兑换系统",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffe5ec",
+  "theme_color": "#ff8fab",
+  "icons": [
+    {
+      "src": "icon.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

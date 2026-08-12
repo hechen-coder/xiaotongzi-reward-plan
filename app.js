@@ -64,6 +64,7 @@ let state = {
   currentPoints: 0,
   totalPoints: 0,
   lastCheckDate: '', 
+  streakDays: 0,
   tasksChecked: {},  
   milestonesClaimed: {}, 
   history: [] // 日志记录
@@ -87,10 +88,23 @@ function loadState() {
     }
   }
   
-  const today = new Date().toDateString();
-  if (state.lastCheckDate !== today) {
+  const todayDate = new Date();
+  const todayStr = todayDate.toDateString();
+  
+  if (state.lastCheckDate !== todayStr) {
+    const yesterday = new Date(todayDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (state.lastCheckDate === yesterday.toDateString()) {
+      state.streakDays = (state.streakDays || 0) + 1;
+    } else if (state.lastCheckDate !== '') {
+      state.streakDays = 1;
+    } else {
+      state.streakDays = 1;
+    }
+
     state.tasksChecked = {};
-    state.lastCheckDate = today;
+    state.lastCheckDate = todayStr;
     addLog('新的一天，加油！', 'gain', 0);
     saveState();
   }
@@ -138,15 +152,24 @@ function renderTasks() {
       const ptsClass = isNegative ? 'minus' : 'plus';
       const ptsPrefix = isNegative ? '' : '+';
       
+      let extraClass = '';
+      let extraIcon = '';
+      if (!isNegative && task.points >= 8) {
+        extraIcon = '<i class="fa-solid fa-fire high-points-icon"></i>';
+      }
+      if (isNegative && task.points <= -10) {
+        extraClass = 'severe-penalty';
+      }
+      
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = `card ${extraClass}`;
       
       let inputType = isDuration ? 'radio' : 'checkbox';
       let inputName = isDuration ? 'name="durationGroup"' : '';
       
       card.innerHTML = `
         <div class="task-info">
-          <span class="task-name">${task.name}</span>
+          <span class="task-name">${task.name}${extraIcon}</span>
           <span class="task-pts ${ptsClass}">${ptsPrefix}${task.points} 分</span>
         </div>
         <label class="checkbox-wrapper">
@@ -202,7 +225,12 @@ function renderHistory() {
   container.innerHTML = '';
   
   if (state.history.length === 0) {
-    container.innerHTML = '<div style="color:#aaa; text-align:center; padding: 20px;">暂无打卡记录哦，开始今天的努力吧！</div>';
+    container.innerHTML = `
+      <div style="color:var(--text-muted); text-align:center; padding: 40px 20px;">
+        <i class="fa-regular fa-face-smile-wink" style="font-size: 3rem; margin-bottom: 15px; color: var(--secondary-color);"></i>
+        <div>暂无打卡记录哦，开始今天的努力吧！</div>
+      </div>
+    `;
     return;
   }
 
@@ -225,11 +253,43 @@ function renderHistory() {
   });
 }
 
+function updateProgressBar() {
+  const currentTotal = state.totalPoints;
+  let nextGoal = null;
+  
+  for (let i = 0; i < shopData.milestone.length; i++) {
+    let m = shopData.milestone[i];
+    if (!state.milestonesClaimed[m.id] && m.cost > currentTotal) {
+      nextGoal = m;
+      break;
+    }
+  }
+
+  const progressText = document.getElementById('progress-text');
+  const barFill = document.getElementById('progress-bar-fill');
+  
+  if (!progressText || !barFill) return;
+
+  if (nextGoal) {
+    const diff = nextGoal.cost - currentTotal;
+    progressText.innerText = `距离【${nextGoal.name}】还差 ${diff} 分`;
+    const percent = Math.min(100, Math.max(0, (currentTotal / nextGoal.cost) * 100));
+    barFill.style.width = `${percent}%`;
+  } else {
+    progressText.innerText = `太棒了！所有累计成就已解锁！🎉`;
+    barFill.style.width = `100%`;
+  }
+}
+
 function updateUI() {
   document.getElementById('current-points').innerText = state.currentPoints;
   document.getElementById('total-points').innerText = state.totalPoints;
+  if (document.getElementById('streak-display')) {
+    document.getElementById('streak-display').innerText = `已连续努力 ${state.streakDays || 0} 天 👏`;
+  }
   renderShop(); 
   renderHistory();
+  updateProgressBar();
 }
 
 // --- 交互处理 ---
@@ -396,6 +456,48 @@ function triggerBigConfetti() {
   }());
 }
 
+// --- 设置与数据备份 ---
+function openSettingsModal() {
+  document.getElementById('settings-modal-overlay').style.display = 'flex';
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal-overlay').style.display = 'none';
+}
+
+function exportData() {
+  const dataStr = JSON.stringify(state);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `小彤子奖励计划备份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedState = JSON.parse(e.target.result);
+      if (importedState && importedState.tasksChecked !== undefined) {
+        state = importedState;
+        saveState();
+        closeSettingsModal();
+        alert('数据恢复成功！');
+      } else {
+        alert('文件格式错误！');
+      }
+    } catch (err) {
+      alert('解析失败，请检查文件是否完整。');
+    }
+  };
+  reader.readAsText(file);
+}
+
 // --- 启动应用 ---
 window.onload = () => {
   renderDate();
@@ -403,3 +505,14 @@ window.onload = () => {
   renderTasks();
   updateUI();
 };
+
+// --- PWA Service Worker 注册 ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(registration => {
+      console.log('SW registered');
+    }).catch(err => {
+      console.log('SW failed', err);
+    });
+  });
+}
