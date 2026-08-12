@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>小彤子奖励计划</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 引入 FontAwesome 图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- 引入 canvas-confetti 用于特效 -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- 引入 html2canvas 用于生成图片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+  <!-- 顶部积分展示区 -->
+  <header>
+    <h1><i class="fa-solid fa-star"></i> 学习奖励计划</h1>
+    <div id="today-date" class="date-display"></div>
+    <div class="points-container">
+      <div class="point-box">
+        <span class="point-label">可用积分</span>
+        <span class="point-value" id="current-points">0</span>
+      </div>
+      <div class="point-box">
+        <span class="point-label">总累计积分</span>
+        <span class="point-value" id="total-points">0</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- 任务打卡视图 -->
+    <div id="view-tasks" class="view-section active">
+      <div class="section-title"><i class="fa-regular fa-calendar-check"></i> 每日加分项</div>
+      <div class="card-list" id="list-positive"></div>
+
+      <div class="section-title"><i class="fa-solid fa-hourglass-half"></i> 学习时长加分 (取最高项)</div>
+      <div class="card-list" id="list-duration"></div>
+
+      <div class="section-title" style="color: var(--danger-color);"><i class="fa-solid fa-triangle-exclamation"></i> 扣分惩罚项</div>
+      <div class="card-list" id="list-negative"></div>
+    </div>
+
+    <!-- 奖励商城视图 -->
+    <div id="view-shop" class="view-section">
+      <div class="section-title"><i class="fa-solid fa-gift"></i> 积分兑换 (扣除可用积分)</div>
+      <div class="card-list" id="list-exchange"></div>
+
+      <div class="section-title"><i class="fa-solid fa-trophy"></i> 累计成就 (仅限兑换一次)</div>
+      <div class="card-list" id="list-milestone"></div>
+    </div>
+
+    <!-- 历史足迹视图 -->
+    <div id="view-history" class="view-section">
+      <div class="section-title"><i class="fa-solid fa-shoe-prints"></i> 我的足迹</div>
+      <div class="timeline" id="history-timeline">
+        <!-- 动态渲染历史记录 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 兑换券模态框 (隐藏) -->
+  <div id="ticket-modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+      <div class="close-btn" onclick="closeTicketModal()"><i class="fa-solid fa-xmark"></i></div>
+      
+      <!-- 兑换券生成区域 -->
+      <div id="ticket-capture-area" class="ticket">
+        <div class="ticket-header">
+          <i class="fa-solid fa-crown"></i> 专属兑换券
+        </div>
+        <div class="ticket-body">
+          <div class="ticket-item-name" id="ticket-item-name">奶茶</div>
+          <div class="ticket-cost">消耗积分: <span id="ticket-cost-val">1</span> 分</div>
+          <div class="ticket-date" id="ticket-date-val">2026-08-13</div>
+          <div class="ticket-msg">"你超棒的！继续加油鸭！"</div>
+        </div>
+        <div class="ticket-footer">
+          <div class="barcode">|| | ||| | || | | || |</div>
+          <div class="ticket-serial">No. <span id="ticket-serial-val">000001</span></div>
+        </div>
+      </div>
+      
+      <button class="btn-save-img" onclick="saveTicketAsImage()"><i class="fa-solid fa-download"></i> 保存为图片发给他</button>
+    </div>
+  </div>
+
+  <!-- 音频容器 -->
+  <audio id="audio-ding" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" preload="auto"></audio>
+  <audio id="audio-error" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+  <!-- 底部导航栏 -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('tasks', this)">
+      <i class="fa-solid fa-list-check"></i>
+      <span>今日打卡</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('shop', this)">
+      <i class="fa-solid fa-shop"></i>
+      <span>奖励兑换</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('history', this)">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>我的足迹</span>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
