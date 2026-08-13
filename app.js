@@ -44,7 +44,7 @@ const shopData = {
     // { id: 'e5', name: '随心所欲卡', cost: 1000 },
   ],
   milestone: [
-    { id: 'm1', name: '奶茶', cost: 100 },
+    { id: 'm1', name: '奶茶', cost: 130 },
     { id: 'm2', name: '丰盛外卖', cost: 500 },
     // { id: 'm3', name: '榴莲', cost: 400 },
     { id: 'm4', name: 'K歌', cost: 500 },
@@ -72,21 +72,31 @@ let state = {
 };
 
 // --- 初始化与持久化 ---
-function loadState() {
-  const saved = localStorage.getItem('xiaotongzi_state_v2'); // 用新key防止冲突
-  if (saved) {
-    state = JSON.parse(saved);
-  } else {
-    // 兼容老版本数据
-    const oldSaved = localStorage.getItem('xiaotongzi_state');
-    if (oldSaved) {
-      const oldState = JSON.parse(oldSaved);
-      state.currentPoints = oldState.currentPoints || 0;
-      state.totalPoints = oldState.totalPoints || 0;
-      state.tasksChecked = oldState.tasksChecked || {};
-      state.milestonesClaimed = oldState.milestonesClaimed || {};
-      state.lastCheckDate = oldState.lastCheckDate || '';
+async function loadState() {
+  try {
+    const response = await fetch('/api/state');
+    if (response.ok) {
+      const saved = await response.json();
+      if (Object.keys(saved).length > 0) {
+        state = saved;
+      } else {
+        // 后端还没有数据时，尝试看看本地有没有老数据，顺便合并一下
+        const oldSaved = localStorage.getItem('xiaotongzi_state');
+        if (oldSaved) {
+          const oldState = JSON.parse(oldSaved);
+          state.currentPoints = oldState.currentPoints || 0;
+          state.totalPoints = oldState.totalPoints || 0;
+          state.tasksChecked = oldState.tasksChecked || {};
+          state.milestonesClaimed = oldState.milestonesClaimed || {};
+          state.lastCheckDate = oldState.lastCheckDate || '';
+        }
+      }
     }
+  } catch (e) {
+    console.error("加载云端数据失败，请检查服务器是否开启", e);
+    // 如果服务器连不上，降级读取本地试试
+    const local = localStorage.getItem('xiaotongzi_state_v2');
+    if (local) state = JSON.parse(local);
   }
   
   const todayDate = new Date();
@@ -111,8 +121,23 @@ function loadState() {
   }
 }
 
-function saveState() {
+async function saveState() {
+  // 依然保存一份到本地做备份
   localStorage.setItem('xiaotongzi_state_v2', JSON.stringify(state));
+  
+  // 发送给后端
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(state)
+    });
+  } catch (e) {
+    console.error("同步到云端失败", e);
+  }
+  
   updateUI();
 }
 
@@ -500,9 +525,9 @@ function importData(event) {
 }
 
 // --- 启动应用 ---
-window.onload = () => {
+window.onload = async () => {
   renderDate();
-  loadState();
+  await loadState();
   renderTasks();
   updateUI();
 };

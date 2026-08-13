@@ -1,0 +1,14 @@
+# 依赖目录
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+.pnpm-debug.log*
+
+# 个人数据文件 (不提交到版本库以防隐私泄露)
+server_data.json
+初始干净数据.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
