@@ -1,4 +1,4 @@
-const CACHE_NAME = 'xiaotongzi-v1';
+const CACHE_NAME = 'xiaotongzi-v2';
 const urlsToCache = [
   './',
   './index.html',
